@@ -8,7 +8,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: '*', // Ensure to restrict this in production!
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Access-Control-Allow-Origin'],
   },
@@ -17,47 +17,45 @@ const io = new Server(server, {
 const PORT = process.env.PORT || 6900;
 
 io.on('connection', (socket) => {
-  let userSpeakingData = [];
-
   console.log('A user connected');
 
   socket.on('disconnect', () => {
     console.log('User disconnected');
+    stopLiveTranscription(); // Consider passing any necessary arguments
   });
 
-  socket.on('userSpeaking', async (userSpeaking, selectedPerson) => {
+  socket.on('userSpeaking', async (audioBlob, selectedPerson) => {
     console.log('Received audio data from client');
-
     try {
-      // Start live transcription
-      await startLiveTranscription(socket, userSpeaking, selectedPerson);
+      await startLiveTranscription(socket, audioBlob, selectedPerson);
     } catch (error) {
-      console.error('Error during live transcription:', error.message);
+      console.error('Error during live transcription:', error);
       socket.emit('transcriptionError', { error: error.message });
     }
   });
 
-  socket.on('userStoppedSpeaking', async () => {
+  socket.on('userStoppedSpeaking', async (name, transcript) => {
     console.log('User stopped speaking');
-    stopLiveTranscription(socket);
+    stopLiveTranscription();
 
-    // await sendToOpenAI(selectedPerson, transcript, socket);
-  });
-
-  socket.on('userTranscriptData', (transcriptData) => {
-    console.log('Received transcript data from client');
-    userSpeakingData.push(transcriptData);
-
-    console.log('User speaking data:', userSpeakingData);
+    if (transcript && transcript.length > 0) {
+      try {
+        await sendToOpenAI(name, transcript, socket);
+      } catch (error) {
+        console.error('Error sending data to OpenAI:', error);
+        socket.emit('openaiError', { error: error.message });
+      }
+    }
   });
 
   socket.on('celebritySpeaking', (selectedPerson) => {
-    console.log('Received audio data from client');
+    console.log('Celebrity speaking:', selectedPerson);
+    // Handle celebrity speaking event if necessary
   });
 
   socket.on('end-call', () => {
     console.log('Call ended');
-    stopLiveTranscription(socket);
+    stopLiveTranscription(); // Consider passing any necessary arguments
   });
 });
 

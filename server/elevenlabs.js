@@ -33,7 +33,6 @@ async function convertToSpeechAndPlay(personName, text) {
 
     const audioUrl = response.data.audioUrl;
 
-    // Play the audio response
     const audio = new Audio(audioUrl);
     audio.play();
 

@@ -3,7 +3,6 @@ import CelebritySection from './CelebritySection';
 import UserSection from './UserSection';
 import CallStatus from './CallStatus';
 import CallButton from './CallButton';
-
 import useSocket from '@/hooks/useSocket';
 
 interface CallInterfaceProps {
@@ -15,111 +14,75 @@ interface CallInterfaceProps {
 const CallInterface: FC<CallInterfaceProps> = ({ imageUrl, name, onClose }) => {
   const [userSpeaking, setUserSpeaking] = useState(false);
   const [celebritySpeaking, setCelebritySpeaking] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordingIndicatorRef = useRef<HTMLDivElement | null>(null);
-  let lastUserSpeechTime = Date.now();
+  const [callTime, setCallTime] = useState<number>(0);
+  const callTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const socket: any = useSocket('http://localhost:6900');
 
-  const handleMuteMicrophone = () => {
-    if (userSpeaking) {
-      socket.emit('userStoppedSpeaking');
-
-      if (mediaRecorderRef.current) {
-        mediaRecorderRef.current.stop();
-        setUserSpeaking(false);
-      }
-    } else {
-      handleUnmuteMicrophone();
-    }
-  };
-
-  const handleUnmuteMicrophone = () => {
-    console.log('Unmuting microphone');
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== 'recording'
-    ) {
-      console.log('Starting media recorder');
-
-      const mediaRecorder = mediaRecorderRef.current;
-      // mediaRecorder.ondataavailable = (e) => {
-      //   if (e.data.size > 0 && socket.connected) {
-      //     console.log('Sending audio data:', e.data);
-      //     socket.emit('userSpeaking', e.data, name);
-      //   }
-      // };
-
-      mediaRecorder.start();
-      setUserSpeaking(true);
-      lastUserSpeechTime = Date.now();
-    }
-  };
-
   useEffect(() => {
-    if (socket) {
-      socket.emit('call', { celebrity: name });
+    const startRecording = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        const mediaRecorder: any = new MediaRecorder(stream, {
+          mimeType: 'audio/webm',
+        });
 
-      socket.on('celebritySpeaking', (isSpeaking: boolean) => {
-        setCelebritySpeaking(isSpeaking);
-      });
-    }
+        mediaRecorder.ondataavailable = (event: any) => {
+          if (event.data.size > 0 && socket.connected) {
+            socket.emit('userSpeaking', event.data, name);
+          }
+        };
 
-    const handleMediaStream = async (stream: MediaStream) => {
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm',
-      });
+        mediaRecorder.onstart = () => {
+          startCallTimer();
+        };
+        mediaRecorder.onstop = () => {
+          stopCallTimer();
+        };
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0 && socket.connected) {
-          console.log('Sending audio data:', e.data);
-          socket.emit('userSpeaking', e.data, name);
-        }
-      };
-
-      mediaRecorder.onstart = () => {
-        console.log('Recording started');
-        if (recordingIndicatorRef.current) {
-          recordingIndicatorRef.current.style.display = 'block';
-        }
-      };
-
-      mediaRecorder.onstop = () => {
-        console.log('Recording stopped');
-        if (recordingIndicatorRef.current) {
-          recordingIndicatorRef.current.style.display = 'none';
-        }
-      };
-
-      mediaRecorder.onerror = (err) => {
-        console.error('MediaRecorder error:', err);
-      };
-
-      mediaRecorder.start();
-      setUserSpeaking(true);
-      mediaRecorderRef.current = mediaRecorder;
+        mediaRecorder.start();
+        setUserSpeaking(true);
+      } catch (error) {
+        console.error('Error accessing user media:', error);
+      }
     };
 
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(handleMediaStream)
-      .catch((err) => {
-        console.error('Error accessing user media:', err);
-      });
+    socket?.on('celebritySpeaking', setCelebritySpeaking);
+    startRecording();
 
     return () => {
-      if (
-        mediaRecorderRef.current &&
-        mediaRecorderRef.current.state === 'recording'
-      ) {
-        mediaRecorderRef.current.stop();
-      }
+      socket?.off('celebritySpeaking');
+      stopCallTimer();
     };
-  }, [socket]);
+  }, [socket, name]);
+
+  const startCallTimer = () => {
+    callTimerRef.current = setInterval(() => {
+      setCallTime((prevTime) => prevTime + 1);
+    }, 1000);
+  };
+
+  const stopCallTimer = () => {
+    if (callTimerRef.current) {
+      clearInterval(callTimerRef.current);
+    }
+  };
+
+  const toggleMicrophone = () => {
+    if (userSpeaking) {
+      // socket.emit('userStoppedSpeaking');
+      setUserSpeaking(false);
+    } else {
+      setUserSpeaking(true);
+    }
+  };
 
   const handleCloseModal = () => {
     socket.emit('end-call');
     onClose();
+    setCallTime(0);
   };
 
   return (
@@ -133,10 +96,11 @@ const CallInterface: FC<CallInterfaceProps> = ({ imageUrl, name, onClose }) => {
           />
           <UserSection isSpeaking={userSpeaking} />
         </div>
-        <CallStatus />
+        <CallStatus callTime={callTime} />
         <CallButton onClick={handleCloseModal} />
-
-        <button onClick={handleMuteMicrophone}>Mute</button>
+        <button onClick={toggleMicrophone}>
+          {userSpeaking ? 'Mute' : 'Unmute'}
+        </button>
       </div>
     </div>
   );

@@ -6,45 +6,50 @@ dotenv.config();
 const deepgram = createClient(process.env.DEEPGRAM_API_KEY);
 let connection;
 
-const startLiveTranscription = (socket, audioData) => {
+const startLiveTranscription = (socket, audioData, name) => {
   connection = deepgram.listen.live({
     model: 'nova-2',
     language: 'en-US',
     smart_format: true,
   });
-  return new Promise((resolve, reject) => {
-    connection.once(LiveTranscriptionEvents.Open, () => {
-      resolve(connection);
-    });
 
-    connection.on(LiveTranscriptionEvents.Error, (err) => {
-      reject(err);
-    });
+  const userSpeakingData = [];
 
-    connection.on(LiveTranscriptionEvents.Transcript, (data) => {
-      console.log('You: ', data.channel.alternatives[0].transcript);
-      socket.emit(
-        'userTranscriptData',
-        data.channel.alternatives[0].transcript
-      );
-    });
-  })
-    .then(() => {
-      if (connection) {
-        connection.send(audioData);
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-    });
+  connection.once(LiveTranscriptionEvents.Open, () => {
+    console.log('Transcription connection opened');
+    if (connection) {
+      connection.send(audioData);
+    }
+  });
+
+  connection.on(LiveTranscriptionEvents.Transcript, (data) => {
+    const transcript = data.channel.alternatives[0].transcript;
+    console.log('You:', transcript);
+    userSpeakingData.push(transcript);
+  });
+
+  connection.on(LiveTranscriptionEvents.Close, async () => {
+    console.log('Connection closed', name, userSpeakingData);
+    await stopLiveTranscription();
+    socket.emit('userStoppedSpeaking', name, userSpeakingData);
+  });
+
+  connection.on(LiveTranscriptionEvents.Error, (err) => {
+    console.error('Deepgram transcription error:', err);
+    stopLiveTranscription();
+    socket.emit('transcriptionError', err.message);
+  });
+
+  return connection;
 };
 
 const stopLiveTranscription = () => {
   console.log('Stopping live transcription');
-  if (connection) {
+  if (connection && connection.isActive) {
     connection.finish();
+    console.log('Transcription connection finished');
   } else {
-    console.warn('Connection is not open.');
+    console.warn('No active transcription connection to close.');
   }
 };
 
