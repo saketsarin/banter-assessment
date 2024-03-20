@@ -4,7 +4,6 @@
 
 :root {
   /* #region  /**=========== Primary Color =========== */
-  /* !STARTERCONF Customize these variable, copy and paste from /styles/colors.css for list of colors */
   --tw-color-primary-50: 240 249 255;
   --tw-color-primary-100: 224 242 254;
   --tw-color-primary-200: 186 230 253;
@@ -26,6 +25,11 @@
   --color-primary-800: rgb(var(--tw-color-primary-800)); /* #075985 */
   --color-primary-900: rgb(var(--tw-color-primary-900)); /* #0c4a6e */
   /* #endregion  /**======== Primary Color =========== */
+}
+
+body {
+  background-color: #0a0a0a;
+  color: #ffffff;
 }
 
 @layer base {

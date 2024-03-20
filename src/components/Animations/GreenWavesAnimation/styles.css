@@ -1,0 +1,37 @@
+.green-waves {
+  position: relative;
+}
+
+.green-waves::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  box-sizing: border-box;
+  animation: wave-animation 2s ease-in-out infinite;
+}
+
+.green-waves.active::after {
+  border-color: #00ff00;
+}
+
+@keyframes wave-animation {
+  0%,
+  100% {
+    border-width: 2px;
+    opacity: 0.5;
+  }
+  25%,
+  75% {
+    border-width: 8px;
+    opacity: 0.7;
+  }
+  50% {
+    border-width: 8px;
+    opacity: 1;
+  }
+}
