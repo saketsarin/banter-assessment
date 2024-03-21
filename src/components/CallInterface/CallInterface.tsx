@@ -19,10 +19,13 @@ const CallInterface: FC<CallInterfaceProps> = ({
   onClose,
 }) => {
   const [userSpeaking, setUserSpeaking] = useState(false);
+  const [celebritySpeaking, setCelebritySpeaking] = useState(false);
   const [callTime, setCallTime] = useState<number>(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
     null
   );
+
+  const ringtoneUrl = '/audio/ringtone.mp3';
 
   useEffect(() => {
     // Initialize mediaRecorder when the component mounts
@@ -52,6 +55,7 @@ const CallInterface: FC<CallInterfaceProps> = ({
       newSocket.on('audioData', async (arrayBuffer: ArrayBuffer) => {
         setUserSpeaking(false);
         setMicrophoneMute(true);
+        setCelebritySpeaking(true);
 
         try {
           const audioContext = new AudioContext();
@@ -62,11 +66,14 @@ const CallInterface: FC<CallInterfaceProps> = ({
           audioSource.start(0);
 
           audioSource.onended = () => {
-            setUserSpeaking(true);
+            setCelebritySpeaking(false);
             setMicrophoneMute(false);
+            setUserSpeaking(true);
           };
         } catch (error) {
           console.error('Error decoding or playing audio:', error);
+          setCelebritySpeaking(false);
+          setMicrophoneMute(false);
           setUserSpeaking(false);
         }
       });
@@ -108,7 +115,7 @@ const CallInterface: FC<CallInterfaceProps> = ({
           <CelebritySection
             imageUrl={imageUrl}
             name={name}
-            isSpeaking={!userSpeaking}
+            isSpeaking={celebritySpeaking}
           />
           <UserSection isSpeaking={userSpeaking} />
         </div>

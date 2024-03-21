@@ -58,8 +58,6 @@ server.listen(process.env.PORT, () => {
 
 const deepgramLive: LiveTranscription | null = getDeepgramLiveConnection(
   async (data: string) => {
-    console.log(`transcript received`);
-
     const transcriptData = JSON.parse(data);
     if (transcriptData.type !== 'Results') {
       return;

@@ -58,7 +58,6 @@ server.listen(process.env.PORT, () => {
 });
 const deepgramLive = (0, deepgram_1.getDeepgramLiveConnection)((data) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
-    console.log(`transcript received`);
     const transcriptData = JSON.parse(data);
     if (transcriptData.type !== 'Results') {
         return;
