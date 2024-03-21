@@ -51,6 +51,7 @@ const CallInterface: FC<CallInterfaceProps> = ({
 
       newSocket.on('audioData', async (arrayBuffer: ArrayBuffer) => {
         setUserSpeaking(false);
+        setMicrophoneMute(true);
 
         try {
           const audioContext = new AudioContext();
@@ -62,6 +63,7 @@ const CallInterface: FC<CallInterfaceProps> = ({
 
           audioSource.onended = () => {
             setUserSpeaking(true);
+            setMicrophoneMute(false);
           };
         } catch (error) {
           console.error('Error decoding or playing audio:', error);
@@ -82,6 +84,15 @@ const CallInterface: FC<CallInterfaceProps> = ({
 
     return () => clearInterval(timer);
   }, []);
+
+  const setMicrophoneMute = (mute: boolean) => {
+    if (mediaRecorder) {
+      const tracks = mediaRecorder.stream.getAudioTracks();
+      tracks.forEach((track) => {
+        track.enabled = !mute;
+      });
+    }
+  };
 
   const handleCloseModal = () => {
     // Stop the media recorder, disconnect the socket, and close the modal
