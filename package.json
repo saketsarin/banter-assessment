@@ -6,7 +6,7 @@
     "dev": "concurrently \"next dev\" \"npm run backend\"",
     "build": "next build",
     "start": "next start",
-    "backend": "node server/server.js",
+    "backend": "cd server && npm run dev",
     "lint": "next lint",
     "lint:fix": "eslint src --fix && pnpm format",
     "lint:strict": "eslint --max-warnings=0 src",
