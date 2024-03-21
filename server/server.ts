@@ -26,8 +26,8 @@ socketIOServer.on('connection', (socket) => {
   clientSocket = socket;
 
   // Send initial message from the celebrity once the client connects
-  // const initialMessage = `Hello, I am ${personName}. Let's start our conversation.`;
-  // clientSocket.emit('celebritySpeaking', initialMessage);
+  const initialMessage = `Hello, I am ${personName}. Let's start our conversation.`;
+  clientSocket.emit('celebritySpeaking', initialMessage);
 
   // after connection, an event is emitted to the client to get the person's name and voice_id
   socket.on('getDetails', (data) => {
