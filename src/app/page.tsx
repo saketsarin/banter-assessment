@@ -21,6 +21,7 @@ const Home: FC = () => {
               key={index}
               imageUrl={celebrity.imageUrl}
               name={celebrity.name}
+              voice_id={celebrity.voiceId}
             />
           ))}
         </div>

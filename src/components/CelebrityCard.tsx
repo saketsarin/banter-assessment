@@ -7,9 +7,14 @@ import CallInterface from './CallInterface/CallInterface';
 interface CelebrityCardProps {
   imageUrl: string;
   name: string;
+  voice_id: string;
 }
 
-const CelebrityCard: FC<CelebrityCardProps> = ({ imageUrl, name }) => {
+const CelebrityCard: FC<CelebrityCardProps> = ({
+  imageUrl,
+  name,
+  voice_id,
+}) => {
   const [showModal, setShowModal] = useState(false);
 
   const handleCloseModal = () => {
@@ -44,6 +49,7 @@ const CelebrityCard: FC<CelebrityCardProps> = ({ imageUrl, name }) => {
         <CallInterface
           imageUrl={imageUrl}
           name={name}
+          voice_id={voice_id}
           onClose={handleCloseModal}
         />
       )}

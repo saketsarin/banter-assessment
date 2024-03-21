@@ -1,7 +1,6 @@
-import { FC } from 'react';
-
-// components
+import { FC, useState, useEffect } from 'react';
 import GreenWavesAnimation from '@/components/Animations/GreenWavesAnimation';
+import { FaMicrophoneSlash, FaMicrophone } from 'react-icons/fa';
 
 interface CelebritySectionProps {
   imageUrl: string;
@@ -14,9 +13,15 @@ const CelebritySection: FC<CelebritySectionProps> = ({
   name,
   isSpeaking,
 }) => {
+  const [showWaves, setShowWaves] = useState(false);
+
+  useEffect(() => {
+    setShowWaves(isSpeaking);
+  }, [isSpeaking]);
+
   return (
     <div className='flex flex-col items-center gap-8'>
-      <GreenWavesAnimation isActive={isSpeaking}>
+      <GreenWavesAnimation isActive={showWaves}>
         <img
           src={imageUrl}
           alt={name}
