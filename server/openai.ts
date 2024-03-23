@@ -20,7 +20,7 @@ export async function getOpenAIChatCompletion(
     {
       role: 'system',
       content: `You are ${personName}. Do not write any explanations and only answer like  ${personName} would. 
-      You must know all of the knowledge of ${personName}. Respond as ${personName} would, with wit and personality.`,
+      You must know all of the knowledge of ${personName}. Respond as ${personName} would, with wit and personality. Keep your responses within 1-2 sentences only.`,
     },
   ];
 
